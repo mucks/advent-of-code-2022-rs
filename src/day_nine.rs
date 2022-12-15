@@ -71,47 +71,70 @@ fn insert_tail_pos(
 
 fn apply_direction(
     knots: &mut Vec<Vector2>,
-    step: i32,
+    total_step: i32,
     direction: &str,
     set: &mut HashSet<Vector2>,
 ) {
-    let head = knots[0].clone();
-    let (vertical, add, range): (_, _, Vec<i32>) = match direction {
-        "R" => (false, 1, (head.x..head.x + step).collect()),
-        "L" => (false, -1, (head.x - step..head.x).rev().collect()),
-        "D" => (true, 1, (head.y..head.y + step).collect()),
-        "U" => (true, -1, (head.y - step..head.y).rev().collect()),
-        _ => panic!("invalid direction: {}", direction),
-    };
-
-    for _ in range {
+    for _ in 0..total_step {
+        let step = 1;
         for i in 0..knots.len() - 1 {
+            let head_index = i;
             let tail_index = i + 1;
-            let mut head = knots[i];
+            let mut head = knots[head_index];
             let mut tail = knots[tail_index];
-
-            let (head_i, head_j) = if vertical {
-                (&mut head.y, &mut head.x)
-            } else {
-                (&mut head.x, &mut head.y)
-            };
-            let (tail_i, tail_j) = if vertical {
-                (&mut tail.y, &mut tail.x)
-            } else {
-                (&mut tail.x, &mut tail.y)
+            // only for H
+            let (vertical, add) = match direction {
+                "R" => (false, 1),
+                "L" => (false, -1),
+                "D" => (true, 1),
+                "U" => (true, -1),
+                _ => panic!("invalid direction: {}", direction),
             };
 
-            *head_i += add;
-            if head_i.abs_diff(*tail_i) > 1 {
-                if head_j.abs_diff(*tail_j) > 0 {
-                    *tail_j = *head_j;
+            let range: Vec<i32> = match head_index {
+                0 => match direction {
+                    "R" => (head.x..head.x + step).collect(),
+                    "L" => (head.x - step..head.x).rev().collect(),
+                    "D" => (head.y..head.y + step).collect(),
+                    "U" => (head.y - step..head.y).rev().collect(),
+                    _ => panic!("invalid direction: {}", direction),
+                },
+                _ => match direction {
+                    "R" => (tail.x..head.x).collect(),
+                    "L" => (tail.x..head.x).rev().collect(),
+                    "D" => (tail.y..head.y).collect(),
+                    "U" => (tail.y..head.y).rev().collect(),
+                    _ => panic!("invalid direction: {}", direction),
+                },
+            };
+
+            // do the same match for tail (adjust the range)
+
+            for _ in range {
+                let (head_i, head_j) = if vertical {
+                    (&mut head.y, &mut head.x)
+                } else {
+                    (&mut head.x, &mut head.y)
+                };
+                let (tail_i, tail_j) = if vertical {
+                    (&mut tail.y, &mut tail.x)
+                } else {
+                    (&mut tail.x, &mut tail.y)
+                };
+
+                *head_i += add;
+                if head_i.abs_diff(*tail_i) > 1 {
+                    if head_j.abs_diff(*tail_j) > 0 {
+                        *tail_j = *head_j;
+                    }
+                    println!("move tail: {}", tail_index);
+                    *tail_i += add;
+                    insert_tail_pos(set, tail, tail_index, knots.len());
                 }
-                *tail_i += add;
-                insert_tail_pos(set, tail, tail_index, knots.len());
-            }
 
-            knots[i] = head;
-            knots[tail_index] = tail;
+                knots[head_index] = head;
+                knots[tail_index] = tail;
+            }
         }
     }
 }
@@ -127,13 +150,13 @@ fn follow_tail(instruction: &str, knots: &mut Vec<Vector2>, set: &mut HashSet<Ve
 }
 
 pub fn run() {
-    let input = get_input("day_nine");
+    let input = get_input("day_nine_small_part_two");
 
     let mut knots: Vec<Vector2> = vec![];
 
     // part one '2' knots
     // part two '10' knots
-    for _i in 0..2 {
+    for _i in 0..10 {
         knots.push(Vector2::new(0, 0));
     }
 

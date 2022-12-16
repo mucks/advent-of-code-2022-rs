@@ -1,7 +1,5 @@
 use crate::util::get_input;
 
-fn part_one(instructions: Vec<&str>) {}
-
 pub fn run() {
     let input = get_input("day_ten");
     let instructions: Vec<&str> = input.split('\n').collect();
